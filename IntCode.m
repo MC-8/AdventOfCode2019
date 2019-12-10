@@ -79,13 +79,14 @@ classdef IntCode < matlab.System
                 opnparout = obj.getnparamout(obj.opn,opcode);
                 opnfun = obj.getopfun(obj.opn,opcode);
                 par = [];
+                % Parse parameter values and modes, incrementing program counter as it goes
                 for k = 1:opnpar
                     par(k).mode = opcode_word(end-1-k);
                     par(k).val = obj.puzzle_input(obj.ipc); 
                     obj.ipc=obj.ipc+1;
                 end
 
-                % Opcode, operands, result
+                % Get parameter values depending on their mode
                 opval=[];
                 for k = 1:opnpar%-opnparout % Only input parameters are relevant for modes
                     if (par(k).mode=='0') %position
@@ -99,24 +100,25 @@ classdef IntCode < matlab.System
                     end
                 end
 
-                % Deal array of values as tuple of arguments
+                % Deal array of values as tuple of arguments. Pass only input arguments
                 if isempty(opval)
                     result = opnfun();
                 else
                     args = mat2cell(opval(1:opnpar-opnparout),1,ones(1,numel(opval(1:opnpar-opnparout))));
                     result = opnfun(args{:});
                 end
-                %fprintf("Exec %s()\n", obj.opn{str2double(opcode)}.fname);
-                if (opcode == '3') || (opcode == '2') || (opcode == '1') || (opcode == '7')|| (opcode == '8')
+                
+                % Deal with outputs
+                if (opcode == '1') || (opcode == '2') || (opcode == '3') || (opcode == '7')|| (opcode == '8')
                     % Store input at a certain location
                     if par(end).mode=='0'
                         obj.puzzle_input(zb2ob(par(end).val)) = result;
+                    elseif par(end).mode=='1'
+                        disp(['INVALID OUTPUT MODE FOR OPCODE ' opcode])
                     elseif par(end).mode=='2'
                         obj.puzzle_input(zb2ob(obj.relbaseaddr(par(end).val))) = result;
                     end
                 elseif opcode == '4' % The output instruction
-                    %fprintf("obj.puzzle_input(zb2ob(par(end).val %d) %d);\n",par(end).val,zb2ob(par(end).val));
-                    %fprintf("Opcode 4, val: %d, mode: %d;\n",par(end).val,str2double(par(end).mode));
                     if par(end).mode=='0'
                         obj.output = obj.puzzle_input(zb2ob(par(end).val));
                     elseif par(end).mode=='1'
@@ -124,29 +126,21 @@ classdef IntCode < matlab.System
                     elseif par(end).mode=='2'
                         obj.output = obj.puzzle_input(zb2ob(obj.relbaseaddr(par(end).val)));
                     end
-                    %this
-                    %obj.output = par(end).val;
                     output = obj.output;
-                    %fprintf("My output is %d\n",output);
                     return
-                elseif (opcode == '5') || (opcode == '6')
-                    % IPC set by the jumpif# functions. Do nothing
-                elseif (opcode == '9')
-                    % Just changed the offset
+                elseif (opcode == '5') || (opcode == '6') || (opcode == '9')
+                    % These instructions have no output
                 else
                     disp("OPCODE output not implemented")
                 end
                 output = obj.output;
             end
         end
-            
-
 
         function resetImpl(obj)
             % Initialize / reset discrete-state properties
         end
-        
-        
+                
         function opfun = getopfun(obj,opn,opcode)
         for i = 1:length(opn)
             if opn{i}.opcode==opcode
@@ -186,23 +180,22 @@ classdef IntCode < matlab.System
         obj.gi_idx  = 2;%obj.gi_idx + 1;
         end
 
-        function o = myoutput(obj)
-%         fprintf("obj.output = %d\n",obj.output);
-%         o=obj.output;
-%         o=425; %TODO remove
-        o = -1; %TODO remove
+        function dummy = myoutput(obj)
+        dummy = -1; % Dummy. Output is set outside
         end
 
-        function ipn = jumpiftrue(obj,par,ipn)
+        function dummy = jumpiftrue(obj,par,ipn)
         if (par)
             obj.ipc = zb2ob(ipn);
         end
+        dummy = -1;
         end
 
-        function ipn = jumpiffalse(obj,par,ipn)
+        function dummy = jumpiffalse(obj,par,ipn)
         if not(par)
             obj.ipc = zb2ob(ipn);
         end
+        dummy = -1;
         end
 
         function res = lessthan(obj,a,b)
@@ -227,9 +220,8 @@ classdef IntCode < matlab.System
         end
 
         function dummy = addtorelbaseoffs(obj,offs)
-        %fprintf("Relbaseoffset = %d, (add %d)\n", obj.relbaseoffset,offs);
         obj.relbaseoffset = obj.relbaseoffset + offs;
-        dummy = 0;
+        dummy = -1;
         end
     end
 end
