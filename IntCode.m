@@ -174,9 +174,8 @@ classdef IntCode < matlab.System
         end
 
         function i = myinput(obj)
-        fprintf("CALLING MYINPUT\n");
         i = obj.gi(obj.gi_idx);
-        fprintf("My input is %d\n",i);
+        %fprintf("My input is %d\n",i);
         obj.gi_idx  = 2;%obj.gi_idx + 1;
         end
 
