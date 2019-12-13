@@ -43,7 +43,7 @@ classdef IntCode < matlab.System
         function setupImpl(obj,u)
             obj.input = u;
             obj.gi(1) = obj.setting;
-            obj.gi(2) = u(2);
+            obj.gi(2) = u;
             obj.gi_idx = 1;
             obj.ipc = 1;
             obj.done = false;
@@ -63,8 +63,8 @@ classdef IntCode < matlab.System
         function output = stepImpl(obj,u)
             % Implement algorithm. Calculate y as a function of input u and
             % discrete states.
-            obj.gi(2) = u(2);
-            obj.input = u(2);
+            obj.gi(2) = u;
+            obj.input = u;
             output = obj.output;
             %fprintf("IPC=%d\n",obj.ipc);
             %%fprintf("STEP amp %d with input %d\n", obj.instance_nr, obj.input);
