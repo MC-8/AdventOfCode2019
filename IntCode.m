@@ -57,7 +57,7 @@ classdef IntCode < matlab.System
             obj.opn{7}.fun = @obj.lessthan   ; obj.opn{7}.nparam = 3; obj.opn{7}.nparamout = 1; obj.opn{7}.opcode = '7'; obj.opn{7}.fname = "lessthan";
             obj.opn{8}.fun = @obj.equals     ; obj.opn{8}.nparam = 3; obj.opn{8}.nparamout = 1; obj.opn{8}.opcode = '8'; obj.opn{8}.fname = "equals";
             obj.opn{9}.fun = @obj.addtorelbaseoffs      ; obj.opn{9}.nparam = 1; obj.opn{9}.nparamout = 0; obj.opn{9}.opcode = '9'; obj.opn{9}.fname = "addtorelbaseoffs";
-            %fprintf("Setup amp %d\n", obj.instance_nr);
+            %%fprintf("Setup amp %d\n", obj.instance_nr);
         end
 
         function output = stepImpl(obj,u)
@@ -66,7 +66,8 @@ classdef IntCode < matlab.System
             obj.gi(2) = u(2);
             obj.input = u(2);
             output = obj.output;
-            %fprintf("STEP amp %d with input %d\n", obj.instance_nr, obj.input);
+            %fprintf("IPC=%d\n",obj.ipc);
+            %%fprintf("STEP amp %d with input %d\n", obj.instance_nr, obj.input);
             while (and(obj.ipc < numel(obj.puzzle_input), not(obj.checkstop(obj.puzzle_input(obj.ipc)))))
                 % Indexes
                 opcode_word = num2str(obj.puzzle_input(obj.ipc)); obj.ipc=obj.ipc+1;
@@ -82,8 +83,10 @@ classdef IntCode < matlab.System
                 % Parse parameter values and modes, incrementing program counter as it goes
                 for k = 1:opnpar
                     par(k).mode = opcode_word(end-1-k);
-                    par(k).val = obj.puzzle_input(obj.ipc); 
+                    par(k).val = obj.puzzle_input(obj.ipc);
                     obj.ipc=obj.ipc+1;
+                    %fprintf("IPC=%d\n",obj.ipc);
+                    %fprintf("Parameter %d: mode=%s, val=%d\n", k, par(k).mode, par(k).val);
                 end
 
                 % Get parameter values depending on their mode
@@ -107,8 +110,13 @@ classdef IntCode < matlab.System
                     args = mat2cell(opval(1:opnpar-opnparout),1,ones(1,numel(opval(1:opnpar-opnparout))));
                     result = opnfun(args{:});
                 end
-                
+                % %fprintf("Opcode is %s\n",opcode);
+                % %fprintf("Result is %d\n",result);
+                % %fprintf("IPC is %d\n",obj.ipc);
+  
                 % Deal with outputs
+
+                %fprintf("With opcode %s, output mode %s, result = %d", opcode, par(end).mode, result);
                 if (opcode == '1') || (opcode == '2') || (opcode == '3') || (opcode == '7')|| (opcode == '8')
                     % Store input at a certain location
                     if par(end).mode=='0'
@@ -166,10 +174,12 @@ classdef IntCode < matlab.System
         end
 
         function s = mysum(obj,a,b)
+        %fprintf("mysum(%d,%d)\n",a,b);
         s = a+b;
         end
 
         function m = mymul(obj,a,b)
+        %fprintf("mymul(%d,%d)\n",a,b);
         m = a*b;
         end
 
@@ -184,6 +194,7 @@ classdef IntCode < matlab.System
         end
 
         function dummy = jumpiftrue(obj,par,ipn)
+        %fprintf("jumpiftrue(%d,%d)\n",par,ipn);
         if (par)
             obj.ipc = zb2ob(ipn);
         end
@@ -202,6 +213,7 @@ classdef IntCode < matlab.System
         end
 
         function res = equals(obj,a,b)
+        %fprintf("equals(%d,%d)\n",a,b);
         res = double(a==b);
         end
 
