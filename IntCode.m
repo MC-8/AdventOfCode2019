@@ -6,17 +6,17 @@ classdef IntCode < matlab.System
 
     % Public, tunable properties
     properties
-    input
     output
     ipc
     opn
     setting
     done
     gi
-    gi_idx
+    inp_idx
     instance_nr
     puzzle_input% = [3,8,1001,8,10,8,105,1,0,0,21,34,43,64,85,98,179,260,341,422,99999,3,9,1001,9,3,9,102,3,9,9,4,9,99,3,9,102,5,9,9,4,9,99,3,9,1001,9,2,9,1002,9,4,9,1001,9,3,9,1002,9,4,9,4,9,99,3,9,1001,9,3,9,102,3,9,9,101,4,9,9,102,3,9,9,4,9,99,3,9,101,2,9,9,1002,9,3,9,4,9,99,3,9,101,1,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,2,9,9,4,9,3,9,1001,9,2,9,4,9,99,3,9,101,1,9,9,4,9,3,9,102,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,99,3,9,101,1,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,1,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,101,1,9,9,4,9,99,3,9,101,1,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,101,1,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,99,3,9,101,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,1,9,4,9,3,9,102,2,9,9,4,9,99];
     relbaseoffset
+    full_input_sequence
     end
 
     properties(DiscreteState)
@@ -41,10 +41,9 @@ classdef IntCode < matlab.System
     methods(Access = protected)
 
         function setupImpl(obj,u)
-            obj.input = u;
             obj.gi(1) = obj.setting;
             obj.gi(2) = u;
-            obj.gi_idx = 1;
+            obj.inp_idx = 1;
             obj.ipc = 1;
             obj.done = false;
             obj.relbaseoffset = 0;
@@ -64,10 +63,8 @@ classdef IntCode < matlab.System
             % Implement algorithm. Calculate y as a function of input u and
             % discrete states.
             obj.gi(2) = u;
-            obj.input = u;
             output = obj.output;
-            %fprintf("IPC=%d\n",obj.ipc);
-            %%fprintf("STEP amp %d with input %d\n", obj.instance_nr, obj.input);
+            %fprintf("IPC=%d\n",obj.ipc);#
             while (and(obj.ipc < numel(obj.puzzle_input), not(obj.checkstop(obj.puzzle_input(obj.ipc)))))
                 % Indexes
                 opcode_word = num2str(obj.puzzle_input(obj.ipc)); obj.ipc=obj.ipc+1;
@@ -184,9 +181,15 @@ classdef IntCode < matlab.System
         end
 
         function i = myinput(obj)
-        i = obj.gi(obj.gi_idx);
-        %fprintf("My input is %d\n",i);
-        obj.gi_idx  = 2;%obj.gi_idx + 1;
+        %fprintf("Called myinput\n");
+        if obj.full_input_sequence
+            i = obj.full_input_sequence(obj.inp_idx);
+            obj.inp_idx = obj.inp_idx + 1;
+        else
+            i = obj.gi(obj.inp_idx);
+            obj.inp_idx  = 2;
+        end
+        fprintf("%c",i);
         end
 
         function dummy = myoutput(obj)
