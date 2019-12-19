@@ -35,6 +35,10 @@ classdef IntCode < matlab.System
         % object.
         setProperties(obj,nargin,varargin{:});
     end
+
+    function setInput(obj,u)
+        obj.full_input_sequence = u;
+    end
     
     end
     
@@ -72,7 +76,7 @@ classdef IntCode < matlab.System
                 if length(opcode_word)<5
                     opcode_word = pad(opcode_word,5,'left','0');
                 end
-                opcode = num2str(str2num(opcode_word(end-1:end))); %makes '02' to '2'
+                opcode = num2str(str2double(opcode_word(end-1:end))); %makes '02' to '2'
                 opnpar = obj.getnparam(obj.opn,opcode);
                 opnparout = obj.getnparamout(obj.opn,opcode);
                 opnfun = obj.getopfun(obj.opn,opcode);
@@ -181,15 +185,15 @@ classdef IntCode < matlab.System
         end
 
         function i = myinput(obj)
-        %fprintf("Called myinput\n");
-        if obj.full_input_sequence
+        fprintf("Called myinput\n");
+        if not(isempty(obj.full_input_sequence))
             i = obj.full_input_sequence(obj.inp_idx);
             obj.inp_idx = obj.inp_idx + 1;
         else
             i = obj.gi(obj.inp_idx);
             obj.inp_idx  = 2;
         end
-        fprintf("%c",i);
+        fprintf("%d\n",i);
         end
 
         function dummy = myoutput(obj)
