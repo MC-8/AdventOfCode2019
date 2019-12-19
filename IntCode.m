@@ -185,7 +185,7 @@ classdef IntCode < matlab.System
         end
 
         function i = myinput(obj)
-        fprintf("Called myinput\n");
+        %fprintf("Called myinput\n");
         if not(isempty(obj.full_input_sequence))
             i = obj.full_input_sequence(obj.inp_idx);
             obj.inp_idx = obj.inp_idx + 1;
@@ -193,7 +193,7 @@ classdef IntCode < matlab.System
             i = obj.gi(obj.inp_idx);
             obj.inp_idx  = 2;
         end
-        fprintf("%d\n",i);
+        %fprintf("%d\n",i);
         end
 
         function dummy = myoutput(obj)
