@@ -258,7 +258,7 @@ frontier = [start_pos]
 visited[r,c,0] = (r,c,0) # Add dimensions!!
 
 # Backtracking algorithm
-while frontier:
+while (frontier and goal_pos not in visited):
     f = frontier.pop(0)
     up =  (f[0]-1,f[1], f[2])
     down = (f[0]+1,f[1], f[2])
@@ -313,12 +313,15 @@ while frontier:
 # Backtrack
 pos = goal_pos
 solution = 0
+path_back = []
 if goal_pos not in visited:
     solution = 0
 else:
     while pos != start_pos:
         pos = visited[pos]
+        path_back.append(pos)
         if pos[0:2] not in gates_from_to and pos[0:2] not in (start_pos, goal_pos): # Don't count gate spaces (letters)
             solution += 1
 solution -=1 # Remove this counts the cells from A to Z but it's one less step.
+print(path_back)
 print(f"{solution=}")
