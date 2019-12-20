@@ -66,19 +66,19 @@ char_maze = ["#########################################",
 start_pos = None
 goal_pos = None
 visited = {} # cell : previous cell
-good_path = []
+road_cells = []
 # Parse maze
 for r in range(len(char_maze[:])):
     for c in range(len(char_maze[0])):
         if char_maze[r][c] == '.':
-            good_path.append((r,c))
+            road_cells.append((r,c))
         if char_maze[r][c] == 'A':
             start_pos = (r,c)
         if char_maze[r][c] == 'Z':
             goal_pos = (r,c)
 
-good_path.append(start_pos)
-good_path.append(goal_pos)
+road_cells.append(start_pos)
+road_cells.append(goal_pos)
 
 frontier = [start_pos]
 visited[r,c] = (r,c)
@@ -91,16 +91,16 @@ while frontier:
     down = (f[0]+1,f[1])
     left = (f[0],f[1]-1)
     right = (f[0],f[1]+1)
-    if (up    not in visited) and (up    in good_path): 
+    if (up    not in visited) and (up    in road_cells): 
         visited[up]    = f
         frontier.append(up)    # Add key, and from where it came from
-    if (down  not in visited) and (down  in good_path): 
+    if (down  not in visited) and (down  in road_cells): 
         visited[down]  = f
         frontier.append(down)  # Add key, and from where it came from
-    if (left  not in visited) and (left  in good_path): 
+    if (left  not in visited) and (left  in road_cells): 
         visited[left]  = f
         frontier.append(left)  # Add key, and from where it came from
-    if (right not in visited) and (right in good_path): 
+    if (right not in visited) and (right in road_cells): 
         visited[right] = f
         frontier.append(right) # Add key, and from where it came from
 

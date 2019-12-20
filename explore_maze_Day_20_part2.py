@@ -22,45 +22,45 @@ char_maze =  ["                     ",
               "              Z      ",
               "              Z      ",
               "                     "] # padded maze with spaces
-char_maze = ["                                     ",
-             "                    A                ",
-             "                    A                ",
-             "   #################.#############   ",
-             "   #.#...#...................#.#.#   ",
-             "   #.#.#.###.###.###.#########.#.#   ",
-             "   #.#.#.......#...#.....#.#.#...#   ",
-             "   #.#########.###.#####.#.#.###.#   ",
-             "   #.............#.#.....#.......#   ",
-             "   ###.###########.###.#####.#.#.#   ",
-             "   #.....#        A   C    #.#.#.#   ",
-             "   #######        S   P    #####.#   ",
-             "   #.#...#                 #......VT ",
-             "   #.#.#.#                 #.#####   ",
-             "   #...#.#               YN....#.#   ",
-             "   #.###.#                 #####.#   ",
-             " DI....#.#                 #.....#   ",
-             "   #####.#                 #.###.#   ",
-             " ZZ......#               QG....#..AS ",
-             "   ###.###                 #######   ",
-             " JO..#.#.#                 #.....#   ",
-             "   #.#.#.#                 ###.#.#   ",
-             "   #...#..DI             BU....#..LF ",
-             "   #####.#                 #.#####   ",
-             " YN......#               VT..#....QG ",
-             "   #.###.#                 #.###.#   ",
-             "   #.#...#                 #.....#   ",
-             "   ###.###    J L     J    #.#.###   ",
-             "   #.....#    O F     P    #.#...#   ",
-             "   #.###.#####.#.#####.#####.###.#   ",
-             "   #...#.#.#...#.....#.....#.#...#   ",
-             "   #.#####.###.###.#.#.#########.#   ",
-             "   #...#.#.....#...#.#.#.#.....#.#   ",
-             "   #.###.#####.###.###.#.#.#######   ",
-             "   #.#.........#...#.............#   ",
-             "   #########.###.###.#############   ",
-             "            B   J   C                ",
-             "            U   P   P                ",
-             "                                     "]
+# char_maze = ["                                     ",
+#              "                    A                ",
+#              "                    A                ",
+#              "   #################.#############   ",
+#              "   #.#...#...................#.#.#   ",
+#              "   #.#.#.###.###.###.#########.#.#   ",
+#              "   #.#.#.......#...#.....#.#.#...#   ",
+#              "   #.#########.###.#####.#.#.###.#   ",
+#              "   #.............#.#.....#.......#   ",
+#              "   ###.###########.###.#####.#.#.#   ",
+#              "   #.....#        A   C    #.#.#.#   ",
+#              "   #######        S   P    #####.#   ",
+#              "   #.#...#                 #......VT ",
+#              "   #.#.#.#                 #.#####   ",
+#              "   #...#.#               YN....#.#   ",
+#              "   #.###.#                 #####.#   ",
+#              " DI....#.#                 #.....#   ",
+#              "   #####.#                 #.###.#   ",
+#              " ZZ......#               QG....#..AS ",
+#              "   ###.###                 #######   ",
+#              " JO..#.#.#                 #.....#   ",
+#              "   #.#.#.#                 ###.#.#   ",
+#              "   #...#..DI             BU....#..LF ",
+#              "   #####.#                 #.#####   ",
+#              " YN......#               VT..#....QG ",
+#              "   #.###.#                 #.###.#   ",
+#              "   #.#...#                 #.....#   ",
+#              "   ###.###    J L     J    #.#.###   ",
+#              "   #.....#    O F     P    #.#...#   ",
+#              "   #.###.#####.#.#####.#####.###.#   ",
+#              "   #...#.#.#...#.....#.....#.#...#   ",
+#              "   #.#####.###.###.#.#.#########.#   ",
+#              "   #...#.#.....#...#.#.#.#.....#.#   ",
+#              "   #.###.#####.###.###.#.#.#######   ",
+#              "   #.#.........#...#.............#   ",
+#              "   #########.###.###.#############   ",
+#              "            B   J   C                ",
+#              "            U   P   P                ",
+#              "                                     "]
 
 char_maze = ["                                                                                                                                   ",
 "                                          M     V       Z   Z         L T     J E     W                                            ",
@@ -197,6 +197,7 @@ goal_pos = None
 visited = {} # cell : previous cell
 good_path = []
 portals = {} # {'portalname': [[p1 r, p1 c],[p2 r, p2 c]]} p1 <-> p2
+MAX_DEPTH = 25
 # Parse maze
 for r in range(len(char_maze[:])):
     for c in range(len(char_maze[0])):
@@ -239,13 +240,14 @@ for r in range(len(char_maze[:])):
                 good_path.append(tuple(gate_coord))
 # Create a dictionary of portal from -> to
 gates_from_to = {}
-
+gates_from_to[start_pos[0:2]] = list(start_pos)
+gates_from_to[goal_pos[0:2]] = list(goal_pos)
 for p in portals.values():
     # Inner from, outer_to
     if 30 < p[0][0] < 100 and 30 < p[0][1] < 100:
-        level_direction = -1
-    else:
         level_direction = 1
+    else:
+        level_direction = -1
     gates_from_to[tuple(p[0])] = deepcopy(p[1])
     gates_from_to[tuple(p[0])].append(level_direction)
     gates_from_to[tuple(p[1])] = deepcopy(p[0])
@@ -273,28 +275,28 @@ while (frontier and goal_pos not in visited):
         up_coord =  gates_from_to[up[0:2]][0:2]
         up_level = up[2] + gates_from_to[up[0:2]][2]
         up = (*up_coord, up_level)
-        if up_level < 0: up = (0,0,0)
+        if up_level < 0 or up_level >= MAX_DEPTH: up = (0,0,0)
     
     if down[0:2] in gates_from_to:
         # warp
         down_coord =  gates_from_to[down[0:2]][0:2]
         down_level = down[2] + gates_from_to[down[0:2]][2]
         down = (*down_coord, down_level)
-        if down_level < 0: down = (0,0,0)
+        if down_level < 0 or down_level >= MAX_DEPTH: down = (0,0,0)
 
     if left[0:2] in gates_from_to:
         # warp
         left_coord =  gates_from_to[left[0:2]][0:2]
         left_level = left[2] + gates_from_to[left[0:2]][2]
         left = (*left_coord, left_level)
-        if left_level < 0: left = (0,0,0)
+        if left_level < 0 or left_level >= MAX_DEPTH: left = (0,0,0)
 
     if right[0:2] in gates_from_to:
         # warp
         right_coord =  gates_from_to[right[0:2]][0:2]
         right_level = right[2] + gates_from_to[right[0:2]][2]
         right = (*right_coord, right_level)
-        if right_level < 0: right = (0,0,0)
+        if right_level < 0 or right_level >= MAX_DEPTH: right = (0,0,0)
 
 
     if (up    not in visited) and (up[0:2]    in good_path): 
@@ -322,6 +324,5 @@ else:
         path_back.append(pos)
         if pos[0:2] not in gates_from_to and pos[0:2] not in (start_pos, goal_pos): # Don't count gate spaces (letters)
             solution += 1
-solution -=1 # Remove this counts the cells from A to Z but it's one less step.
-print(path_back)
+solution -=2 # Start and End position are calculated as from the gates (letters A and Z) but the entrace and exit are in the white space after the letters
 print(f"{solution=}")
