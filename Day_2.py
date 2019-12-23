@@ -17,14 +17,15 @@ print(f"Solution part 1: {computer._mem[0]}")
 # part2
 max_result = -1
 solution = -1
-for noun in range(100):
-    for verb in range(100):
-        #print(f"{noun=}, {verb=}")
-        computer = intcode.IntCode(program=deepcopy(puzzle_input))
-        computer._mem[1] = noun
-        computer._mem[2] = verb
-        computer.run()
-        if computer._mem[0] == 19690720:
-            solution = 100 * noun + verb
+from itertools import product
+for noun, verb in product(range(100), range(100)):
+    #print(f"{noun=}, {verb=}")
+    computer = intcode.IntCode(program=deepcopy(puzzle_input))
+    computer._mem[1] = noun
+    computer._mem[2] = verb
+    computer.run()
+    if computer._mem[0] == 19690720:
+        solution = 100 * noun + verb
+        break
 
 print(f"Solution part 2: {solution}")

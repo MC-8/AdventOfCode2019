@@ -70,6 +70,7 @@ classdef IntCode < matlab.System
             output = obj.output;
             %fprintf("IPC=%d\n",obj.ipc);#
             while (and(obj.ipc < numel(obj.puzzle_input), not(obj.checkstop(obj.puzzle_input(obj.ipc)))))
+                fprintf("%d\n", obj.instance_nr);
                 % Indexes
                 opcode_word = num2str(obj.puzzle_input(obj.ipc)); obj.ipc=obj.ipc+1;
                 % Pad if needed, simplifies mode selection

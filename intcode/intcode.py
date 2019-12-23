@@ -30,9 +30,9 @@ class IntCode(object):
         self._mem[addr] = self._in_list.pop(0)
         return self._mem[addr]
 
-    def op_output(self,addr):
-        self._out_list.append(self._mem[addr])
-        return self._mem[addr]
+    def op_output(self,val):
+        self._out_list.append(val)
+        return val
 
     def op_jumpiftrue(self,condition,addr):
         if condition:
@@ -70,7 +70,7 @@ class IntCode(object):
     operations['01'] =  OpParams( 2, 1, op_sum )
     operations['02'] =  OpParams( 2, 1, op_mul )
     operations['03'] =  OpParams( 0, 1, op_input )
-    operations['04'] =  OpParams( 2, 1, op_output )
+    operations['04'] =  OpParams( 1, 0, op_output )
     operations['05'] =  OpParams( 2, 0, op_jumpiftrue )
     operations['06'] =  OpParams( 2, 0, op_jumpiffalse )
     operations['07'] =  OpParams( 2, 1, op_lessthan )
@@ -155,9 +155,12 @@ class IntCode(object):
         pars.extend([p.real_value for p in par_out])
 
         # Execute operations
-        # print(f"Executing {self.operations[opcode].func} with {pars}")
+        #print(f"Executing {self.operations[opcode].func} with {pars}")
+        r = self.operations[opcode].func(self, *pars)
+        
+        if r is not None: # Value must be assigned
+            pass
 
-        self.operations[opcode].func(self, *pars)
 
 
         
