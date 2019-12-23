@@ -17,7 +17,10 @@ class Parameter:
     real_value: int = 0 # Initialise to 0, it will be assigned at runtime
 
 class IntCode(object):
-    
+
+    def output_available(self):
+        return len(self._out_list) > 0
+        
     def op_sum(self, a, b, out_addr):
         self._mem[out_addr] = a+b
         return a+b
@@ -59,13 +62,6 @@ class IntCode(object):
     def op_terminate(self):
         self.done = True
 
-    _in_list = []
-    _out_list = []
-    _mem = []
-    _pc = 0          # Program counter
-    _id = 0
-    _pc_offset = 0
-    done = False
     operations = {} # Holds Params in/out
     operations['01'] =  OpParams( 2, 1, op_sum )
     operations['02'] =  OpParams( 2, 1, op_mul )
@@ -76,14 +72,20 @@ class IntCode(object):
     operations['07'] =  OpParams( 2, 1, op_lessthan )
     operations['08'] =  OpParams( 2, 1, op_equals )
     operations['09'] =  OpParams( 1, 0, op_addtorelbaseoffs )
-    operations['99'] = OpParams( 0, 0, op_terminate )
-
+    operations['99'] =  OpParams( 0, 0, op_terminate )
+    
     def __init__(self, program, instance=0):
         assert(isinstance(program, list))
         self._mem = program
-        self._pc = 0
-        _pc_offset = 0
+        self._pc = 0 # Program counter
+        self._pc_offset = 0
         self._id = instance
+        self._in_list = []
+        self._out_list = []
+        self._pc = 0          
+        self._id = instance
+        self._pc_offset = 0
+        self.done = False
 
     def push_input(self, v):
         assert(isinstance(v, int) or isinstance(v, list))
