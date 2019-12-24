@@ -68,35 +68,34 @@ while not exit_condition:
     
     network_idle = True
     
-    for i in range(N_NIC):
-        # Run until output is available and pass it to the next Nic. 
-        # Until they are done. Use a round robin approach
-        rr = 0
-        RR_SLICE = 400
-        Nic[i].idle = False
-        while(len(Nic[i]._out_list)<3 and not Nic[i].done and rr < RR_SLICE and not Nic[i].idle):
-            Nic[i].step()
-            rr +=1
-        network_idle = network_idle and (len(Nic[i]._out_list)==0)
-        if (len(Nic[i]._out_list)==3):
-            ip = Nic[i].pop_output()
-            x = Nic[i].pop_output()
-            y = Nic[i].pop_output()
-            if ip==255:
-                NAT = [x,y]
-            else:
-                packets_table.append([ip,x,y]) # Store for future inspection
-                Nic[ip].push_input(deepcopy([x,y]))
-        network_idle = network_idle and (len(Nic[i]._in_list)==0)
+    for _ in range(5): # Go around multiple times to ensure the network is really idle.
+        for i in range(N_NIC):
+            # Run until output is available and pass it to the next Nic. 
+            # Until they are done. Use a round robin approach
+            rr = 0
+            RR_SLICE = 200
+            Nic[i].idle = False
+            while(len(Nic[i]._out_list)<3 and not Nic[i].done and rr < RR_SLICE and not Nic[i].idle):
+                Nic[i].step()
+                rr +=1
+            network_idle = network_idle and (len(Nic[i]._out_list)==0)
+            if (len(Nic[i]._out_list)==3):
+                ip = Nic[i].pop_output()
+                x = Nic[i].pop_output()
+                y = Nic[i].pop_output()
+                if ip==255:
+                    NAT = [x,y]
+                else:
+                    packets_table.append([ip,x,y]) # Store for future inspection
+                    Nic[ip].push_input(deepcopy([x,y]))
+            network_idle = network_idle and (len(Nic[i]._in_list)==0)
 
     if network_idle and not NAT==[None, None]:
         Nic[0].push_input(NAT)
-        print(NAT)
+        print(NAT[1])
         NAT_messages_to_0.append(NAT)
         if last_NAT_msg[1]==NAT[1]:
-            if len(NAT_messages_to_0) > 100:
-                exit_condition = True
+            exit_condition = True
         last_NAT_msg = NAT
 
-print(NAT_messages_to_0)
-print(f"Solution part 2: {last_NAT_msg[1]}") # For some reason, Y is actually 17494 but if I keep running it the solution is 17493...
+print(f"Solution part 2: {last_NAT_msg[1]}")
