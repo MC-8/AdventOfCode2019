@@ -20,7 +20,7 @@ class IntCode(object):
 
     def output_available(self):
         return len(self._out_list) > 0
-        
+
     def op_sum(self, a, b, out_addr):
         self._mem[out_addr] = a+b
         return a+b
@@ -30,7 +30,11 @@ class IntCode(object):
         return a+b
     
     def op_input(self,addr):
-        self._mem[addr] = self._in_list.pop(0)
+        if(len(self._in_list) > 0):
+            self._mem[addr] = self._in_list.pop(0)
+        else:
+            self.idle = True
+            self._mem[addr] = -1
         return self._mem[addr]
 
     def op_output(self,val):
@@ -86,6 +90,7 @@ class IntCode(object):
         self._id = instance
         self._pc_offset = 0
         self.done = False
+        self.idle = False
 
     def push_input(self, v):
         assert(isinstance(v, int) or isinstance(v, list))
@@ -105,6 +110,7 @@ class IntCode(object):
             self.step()
 
     def step(self):
+        self.idle = False
         op_word = str(self._mem[self._pc]).rjust(5,'0')
         #print(f"{op_word=}")
         self._pc += 1
