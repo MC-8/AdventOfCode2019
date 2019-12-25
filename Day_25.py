@@ -12,7 +12,13 @@ while not robot.done:
     if len(robot._out_list) > 0:
         out_buff += chr(robot.pop_output())
     if "Command?" in out_buff:
-        print(out_buff)
+        command = True
+    else:
+        command = False
+    if '\n' in out_buff or command:
+        print(out_buff,end=' ')
+        out_buff = ''
+    if command:
         x = input()
         y_in = []
         for i in range(len(x)):
