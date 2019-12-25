@@ -13,6 +13,17 @@ def get_reachable_keys(owned_keys, key_dependencies):
         reachable_keys.remove(k)
     return reachable_keys
 
+def get_visible_keys(owned_keys, key_dependencies):
+    visible_keys = set()
+    for k in key_dependencies.keys():
+        if key_dependencies[k].issubset(owned_keys):
+            visible_keys.add(k)
+    # Purge owned keys from visible keys
+    #if visible_keys.intersection(owned_keys):
+    for k in visible_keys.intersection(owned_keys):
+        visible_keys.remove(k)
+    return visible_keys
+
 char_maze = ["#########",
              "#b.A.@.a#",
              "#########"]
@@ -29,7 +40,7 @@ char_maze = ["########################",
              "#.....@.a.B.c.d.A.e.F.g#",
              "########################"]
 
-char_maze = ["#################", # This one takes forever (tested up to 3million iterations and still no solution)
+char_maze = ["#################", # Hard one, is a bit slow
              "#i.G..c...e..H.p#",
              "########.########",
              "#j.A..b...f..D.o#",
@@ -154,10 +165,10 @@ for r in range(len(char_maze[:])):
 depends = {}
 steps_from_to = {}
 bonus_keys_from_to = {}
+key_order_from_to = {}
+
 for source, destination in permutations(start_pos.keys(),2):
     print(f"{source=}, {destination=}")
-
-
     # Explore maze from, to
     frontier = [start_pos[source]]
     visited = {} # cell : previous cell
@@ -165,7 +176,6 @@ for source, destination in permutations(start_pos.keys(),2):
     # Backtracking algorithm
     while frontier:
         f = frontier.pop(0)
-
         up = (f[0]-1,f[1])
         down = (f[0]+1,f[1])
         left = (f[0],f[1]-1)
@@ -182,11 +192,11 @@ for source, destination in permutations(start_pos.keys(),2):
         if (right not in visited) and (right in road_cells): 
             visited[right] = f
             frontier.append(right) # Add key, and from where it came from
-    
     # Backtrack, and record dependencies
     pos = start_pos[destination]
     steps = 0
     bonus_keys_from_to[source,destination] = set()
+    key_order_from_to[source,destination] = []
     if source=='@':
         depends[destination] = set()
     if pos not in visited:
@@ -199,15 +209,16 @@ for source, destination in permutations(start_pos.keys(),2):
             if C in doors:
                 if source=='@':
                     depends[destination].add(C.lower())
-            
             # Add "keys captured along they way kind of thing"
             if C in keys and not C==destination:
                 bonus_keys_from_to[source,destination].add(C)
-
-
+                key_order_from_to[source,destination].append(C)
+                # TRY TODO CHECK: to reduce tree, only allow first visible key to be reached (not the ones behind, even if there are no doors)
+                if source=='@':
+                    depends[destination].add(C)
             steps += 1
     steps_from_to[source,destination] = steps
-
+    key_order_from_to[source,destination].reverse()
 print(steps_from_to)
 print(depends)
 
@@ -222,7 +233,8 @@ state = stateNT( owned_keys = owned_keys,
 Q = deque()
 Q.append(state)
 solutions = []
-
+sets_list = []
+steps_list = [] # Min steps associated to get that set of keys (kill early combinations that took too many steps)
 # BFS, try to get all keys!
 iterations = 0
 while Q:
@@ -252,11 +264,27 @@ while Q:
                             steps = steps, 
                             current_position = current_position)
         #print(new_state)
+        continue_branch = True
+        if owned_keys not in sets_list:
+            sets_list.append(owned_keys)
+            steps_list.append(steps)
+        else:
+            iset = sets_list.index(owned_keys)
+            if steps >= steps_list[iset]:
+                # We already got this key set with less steps TODO check EXPERIMENTAL may have adverse effects
+                continue_branch = False
+
         if not new_state.reachable_keys:
             # There are no more reachable keys! We may have them all :)
+            print("ONE SOLUTION WAS FOUND!!!")
+            print(new_state)
             solutions.append(new_state)
         else:
-            Q.append(new_state)
+            if continue_branch:
+                if Q and steps < Q[0].steps: # Prioritise shortest solutions
+                    Q.appendleft(new_state)
+                else:
+                    Q.append(new_state)
 
 min_steps = 1e10
 for s in solutions:
