@@ -165,9 +165,10 @@ for r in range(len(char_maze[:])):
 depends = {}
 steps_from_to = {}
 bonus_keys_from_to = {}
+key_order_from_to = {}
 
 for source, destination in permutations(start_pos.keys(),2):
-    print(f"\n{source=}, \t{destination=}", end='', flush=True)
+    print(f"{source=}, {destination=}")
     # Explore maze from, to
     frontier = [start_pos[source]]
     visited = {} # cell : previous cell
@@ -195,6 +196,7 @@ for source, destination in permutations(start_pos.keys(),2):
     pos = start_pos[destination]
     steps = 0
     bonus_keys_from_to[source,destination] = set()
+    key_order_from_to[source,destination] = []
     if source=='@':
         depends[destination] = set()
     if pos not in visited:
@@ -208,43 +210,45 @@ for source, destination in permutations(start_pos.keys(),2):
                 if source=='@':
                     depends[destination].add(C.lower())
             # Add "keys captured along they way kind of thing"
-            if C in keys and C not in (source):
+            if C in keys and not C==destination:
                 bonus_keys_from_to[source,destination].add(C)
+                key_order_from_to[source,destination].append(C)
                 # TRY TODO CHECK: to reduce tree, only allow first visible key to be reached (not the ones behind, even if there are no doors)
                 if source=='@':
                     depends[destination].add(C)
             steps += 1
     steps_from_to[source,destination] = steps
-    print(f", \t{steps=}",end='',flush=True)
-    print(f", \t{bonus_keys_from_to[source,destination]=}",end='',flush=True)
-    if source=='@':
-        print(f", \t{depends[destination]=}",end='',flush=True)
-print('\n')
-print(steps_from_to)
-print(depends)
+    key_order_from_to[source,destination].reverse()
+# print(steps_from_to)
+# print(depends)
 
 # Iterative solution to get all keys in the least amount of steps
-stateNT = namedtuple('state','owned_keys reachable_keys steps current_position ordered_keys')
+stateNT = namedtuple('state','owned_keys reachable_keys steps current_position')
 owned_keys = set()
 state = stateNT( owned_keys = owned_keys, 
                  reachable_keys = get_reachable_keys(owned_keys, depends), 
                  steps = 0,
-                 current_position = '@',
-                 ordered_keys = [])
+                 current_position = '@')
 
 Q = deque()
 Q.append(state)
 solutions = []
 sets_list = []
 steps_list = [] # Min steps associated to get that set of keys (kill early combinations that took too many steps)
+heads_list = [] # Position associated with a set of keys
 # BFS, try to get all keys!
 iterations = 0
+min_steps = 10000
+n_solutions = 0
+keys_target = len(keys)
+max_got_keys = 0
+killed_branches = 0
+min_steps_max_keys = 10000
 while Q:
     iterations+=1
     S = Q.popleft()
-    if iterations%5000==0:
-        print(f'{iterations=}')
-        print(S)
+    if iterations%10000==0:
+        print(f'{iterations=}, {n_solutions=}, {min_steps=}, {max_got_keys=}/{keys_target}, {len(Q)=}, {killed_branches=}')
     assert(isinstance(S.reachable_keys, set))
     assert(isinstance(S.owned_keys, set))
     for k in S.reachable_keys:
@@ -260,39 +264,48 @@ while Q:
         owned_keys.add(k)
         owned_keys.union(bonus_keys_from_to[S.current_position, k])
         current_position = k
-        ordered_keys = deepcopy(S.ordered_keys)
-        ordered_keys.append(k)
         reachable_keys = get_reachable_keys(owned_keys, depends)
         new_state = stateNT(owned_keys = owned_keys, 
                             reachable_keys = reachable_keys, 
                             steps = steps, 
-                            current_position = current_position,
-                            ordered_keys = ordered_keys)
+                            current_position = current_position)
         #print(new_state)
         continue_branch = True
         if owned_keys not in sets_list:
             sets_list.append(owned_keys)
             steps_list.append(steps)
+            heads_list.append(current_position)
+            max_got_keys = max(max_got_keys, len(owned_keys))
+            if max_got_keys == len(owned_keys):
+                min_steps_max_keys = min(steps, min_steps_max_keys)
         else:
             iset = sets_list.index(owned_keys)
-            if steps > steps_list[iset]:
-                # We already got this key set with less steps TODO check EXPERIMENTAL may not produce the optimal solution
+            # if steps >= steps_list[iset] and current_position==heads_list[iset]:
+            if  ((steps >= steps_list[iset] and 
+                  current_position==heads_list[iset]) or
+                steps > 3864): # We know we can do better than this
+                killed_branches+=1
                 continue_branch = False
-
+            else:
+                steps_list[iset] = steps
+                heads_list[iset] = current_position
         if not new_state.reachable_keys:
             # There are no more reachable keys! We may have them all :)
-            solutions.append(new_state)
+            #print("ONE SOLUTION WAS FOUND!!!")
+            #print(new_state)
+            #solutions.append(new_state)
+            min_steps = min(min_steps, steps)
+            n_solutions += 1
         else:
             if continue_branch:
-                if Q and steps < Q[0].steps: # Prioritise shortest solutions
-                    Q.appendleft(new_state)
+                if Q and (steps < Q[0].steps): # Prioritise shortest solutions
+                    Q.appendleft(deepcopy(new_state))
                 else:
-                    Q.append(new_state)
+                    Q.append(deepcopy(new_state))
 
-min_steps = 1e10
-for s in solutions:
-    if s.steps<min_steps:
-        min_steps = s.steps
+# min_steps = 1e10
+# for s in solutions:
+#     if s.steps<min_steps:
+#         min_steps = s.steps
 
-print(solutions)
-print(f"Solution part 1 is: {min_steps} ")
+print(f"Solution part 1 is: {min_steps=} among {n_solutions=} with a total of {iterations=}")
