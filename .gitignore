@@ -1,1 +1,6 @@
 /.vscode/
+/.ipynb_checkpoints/
+/intcode/__pycache__
+*.bak
+*.dat
+*.dir
