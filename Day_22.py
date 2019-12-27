@@ -1,8 +1,8 @@
 import re
 from enum import Enum
-import pprint
 import numpy as np
 from collections import deque
+from copy import deepcopy
 class Operation(Enum):
     DEAL_WITH_INCREMENT = 0
     CUT = 1
@@ -44,44 +44,6 @@ with open("Day_22_input.txt", 'r') as f:
     sequence = []
     for step in procedure:
         sequence.append(parse_step(step))
-    pp = pprint.PrettyPrinter()
-    #pp.pprint(sequence)
-    
-    # # Basics
-    # L = range(10)
-    # print(deal_into_new_stack(L))
-    # print(cut(L,3))
-    # print(cut(L,-4))
-    # print(deal_with_increment(L, 3))
-    
-    # # Example
-    # L = range(10)
-    # L = deal_with_increment(L, 7)
-    # L = deal_into_new_stack(L)
-    # L = deal_into_new_stack(L)
-    # print(L)
-    # L = range(10)
-    # L = cut(L,6)
-    # L = deal_with_increment(L, 7)
-    # L = deal_into_new_stack(L)
-    # print(L)
-    # L = range(10)
-    # L = deal_with_increment(L, 7)
-    # L = deal_with_increment(L, 9)
-    # L = cut(L,-2)
-    # print(L)
-    # L = range(10)
-    # L = deal_into_new_stack(L)
-    # L = cut(L,-2)
-    # L = deal_with_increment(L, 7)
-    # L = cut(L,8)
-    # L = cut(L,-4)
-    # L = deal_with_increment(L, 7)
-    # L = cut(L,3)
-    # L = deal_with_increment(L, 9)
-    # L = deal_with_increment(L, 3)
-    # L = cut(L,-1)
-    # print(L)
     # Part 1
     L = range(10007)
     for op_val in sequence:
@@ -92,45 +54,28 @@ with open("Day_22_input.txt", 'r') as f:
         if op_val[0] == Operation.CUT:
             L = cut(L, op_val[1])
     print(f"Part 1 solution = {L.index(2019)}")
-    print(f"=================================")
+    sequence = []
+    with open("Day_22_input.txt", 'r') as f:
+        procedure = f.readlines()
+        for step in procedure:
+            sequence.append(parse_step(step))
+    m = 119315717514047
+    n = 101741582076661
+    a = 1 # Gradient
+    b = 0 # Offset
+    pos = 2020
+    for op_val in sequence:
+        if op_val[0] == Operation.DEAL_INTO_NEW_STACK:
+            a = -a %m
+            b = (m-1-b) %m
+        if op_val[0] == Operation.DEAL_WITH_INCREMENT:
+            x = op_val[1]            
+            a = a*x %m
+            b = b*x %m
+        if op_val[0] == Operation.CUT:
+            x = op_val[1]            
+            b = b - x
 
-    # Check values...
-    L = list(range(10007))
-    v = 2020
-    res_list = []
-    res_dict = {}
-    val_before_shuffle = L[v]
-    while (val_before_shuffle not in res_list):
-        for op_val in sequence:
-            if op_val[0] == Operation.DEAL_INTO_NEW_STACK:
-                L = deal_into_new_stack(L)
-            if op_val[0] == Operation.DEAL_WITH_INCREMENT:
-                L = deal_with_increment(L, op_val[1])
-            if op_val[0] == Operation.CUT:
-                L = cut(L, op_val[1])
-        res_list.append(L[v])
-        
-    with open('your_file.txt', 'w') as f:
-        for item in L:
-            f.write("%s\n" % item)
-    # with open('your_file.txt', 'w') as f:
-    #     for item in L:
-    #         f.write("%s\n" % item)
-    # print("\n-----------------------\n")
-    # print(L)
-    # print("\n-----------------------\n")
-    # print(len(res_list))
-    # print("\n-----------------------\n")
-    # print(res_list)
-    # print("\n-----------------------\n")
-    # print(f"Begin part 2")
-    # L = range(119315717514047)
-    # for op_val in sequence:
-    #     if op_val[0] == Operation.DEAL_INTO_NEW_STACK:
-    #         L = deal_into_new_stack(L)
-    #     if op_val[0] == Operation.DEAL_WITH_INCREMENT:
-    #         L = deal_with_increment(L, op_val[1])
-    #     if op_val[0] == Operation.CUT:
-    #         L = cut(L, op_val[1])
-    # print("Done 1 step on huge deck")
-
+    r = (b * pow(1-a, m-2, m)) % m
+    solution = ((pos-r) * pow(a, n*(m-2),m) +r) %m
+    print(f"Part 2 {solution=}")
