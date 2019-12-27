@@ -272,11 +272,6 @@ while Q:
             if steps_from_to[pos, k] > 0: # Can move!
                 steps += steps_from_to[pos, k]
                 owned_keys = deepcopy(S.owned_keys)
-                # This does not take into account the keys that may be collected on the way to another key
-                # For a first solution it's ok, because  when going from a to c in a-b-c
-                # the a-c-b solution (fake) will be longer than a-b-c and discarded later on
-                # Problem is that it adds many more iterations. Should consider to add a "keys captured
-                # along the way to destination" kind of thing
                 owned_keys.add(k)
                 owned_keys.union(bonus_keys_from_to[pos, k])
                 current_position = deepcopy(S.current_position)
